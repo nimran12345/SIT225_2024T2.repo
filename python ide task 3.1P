@@ -1,0 +1,59 @@
+import requests
+import time
+import csv
+
+THING_ID = "your_thing_id"
+VAR_ID = "your_variable_id" 
+CLIENT_ID = "your_client_id"
+CLIENT_SECRET = "your_client_secret"
+
+
+def get_access_token():
+    auth_url = "https://api2.arduino.cc/iot/v1/clients/token"
+    data = {
+        "grant_type": "client_credentials",
+        "client_id": CLIENT_ID,
+        "client_secret": CLIENT_SECRET,
+        "audience": "https://api2.arduino.cc/iot"
+    }
+    response = requests.post(auth_url, data=data)
+    if response.status_code == 200:
+        return response.json()["access_token"]
+    else:
+        print("Failed to get access token:", response.text)
+        exit()
+
+TOKEN = get_access_token()
+
+
+API_URL = f"https://api2.arduino.cc/iot/v2/things/{THING_ID}/properties/{VAR_ID}"
+
+headers = {
+    "Authorization": f"Bearer {TOKEN}",
+    "Content-Type": "application/json"
+}
+
+filename = "sensor_data.csv"
+with open(filename, mode='w', newline='') as file:
+    writer = csv.writer(file)
+    writer.writerow(["Timestamp", "Distance (cm)"])  # CSV Header
+
+    for _ in range(600):  # 10 minutes = 600 seconds
+        try:
+            response = requests.get(API_URL, headers=headers, timeout=5)  # 5 sec timeout
+            if response.status_code == 200:
+                data = response.json()
+                timestamp = time.strftime('%Y-%m-%d %H:%M:%S')
+                distance = data.get("last_value", "N/A")
+
+                writer.writerow([timestamp, distance])
+                print(f"{timestamp} - Distance: {distance} cm")
+            else:
+                print(f"Error: {response.status_code}, {response.text}")
+
+        except requests.exceptions.RequestException as e:
+            print(f"Request error: {e}")
+
+        time.sleep(1)  # Delay 1 second between readings
+
+print(f"Data saved to {filename}")
