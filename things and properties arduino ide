@@ -1,0 +1,47 @@
+#include "thingProperties.h"
+
+#define TRIG_PIN 9
+#define ECHO_PIN 10
+
+void setup() {
+    Serial.begin(9600);
+    pinMode(TRIG_PIN, OUTPUT);
+    pinMode(ECHO_PIN, INPUT);
+ 
+    initProperties(); // Initialize IoT Cloud variables
+    ArduinoCloud.begin(ArduinoIoTPreferredConnection);
+}
+
+void loop() {
+    ArduinoCloud.update();  // Sync data with the cloud
+
+    // Trigger the ultrasonic pulse
+    digitalWrite(TRIG_PIN, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIG_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIG_PIN, LOW);
+
+    // Measure echo time
+    long duration = pulseIn(ECHO_PIN, HIGH);
+    float measuredDistance = duration * 0.034 / 2; // Convert to cm
+
+    // Send data to IoT Cloud
+    distance = measuredDistance;  
+
+    Serial.print("Distance: ");
+    Serial.print(measuredDistance);
+    Serial.println(" cm");
+
+    delay(1000);
+}
+
+// Callback function for distance variable
+void onDistanceChange() {
+    // Required function - can be left empty
+}
+
+// Callback function for randomTemperature variable
+void onRandomTemperatureChange() {
+    // Required function - can be left empty
+}
