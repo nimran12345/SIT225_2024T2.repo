@@ -1,0 +1,44 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Load the CSV file containing sensor data
+file_path = "nimran.csv"  # Update with the correct file path if needed
+df = pd.read_csv(file_path, encoding="ISO-8859-1")
+
+# Function to extract numerical temperature and humidity values from SensorData column
+def parse_sensor_data(value):
+    try:
+        # Check if data contains both Temperature and Humidity
+        if "Temperature" in value and "Humidity" in value:
+            # Clean and split the data to extract temperature and humidity values
+            parts = value.replace("°C", "").replace("%", "").split(",")
+            temp = float(parts[0].split(":")[1].strip())  # Extract temperature
+            humidity = float(parts[1].split(":")[1].strip())  # Extract humidity
+        else:
+            # Handle cases with direct comma-separated values
+            temp, humidity = map(float, value.split(","))
+        return pd.Series([temp, humidity])  # Return temperature and humidity as a Series
+    except:
+        # Return None if data parsing fails
+        return pd.Series([None, None])
+
+# Apply the parsing function to the SensorData column
+df[["Temperature", "Humidity"]] = df["SensorData"].apply(parse_sensor_data)
+
+# Convert Timestamp column to datetime format for plotting
+df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+
+# Remove rows with missing values to clean the data
+df = df.dropna()
+
+# Plot temperature and humidity data over time
+plt.figure(figsize=(12, 6))  # Set the size of the plot
+plt.plot(df["Timestamp"], df["Temperature"], label="Temperature (°C)", marker="o")  # Plot temperature
+plt.plot(df["Timestamp"], df["Humidity"], label="Humidity (%)", marker="s")  # Plot humidity
+plt.xlabel("Timestamp")  # X-axis label
+plt.ylabel("Value")  # Y-axis label
+plt.title("Temperature and Humidity Over Time")  # Plot title
+plt.legend()  # Display legend
+plt.xticks(rotation=45)  # Rotate x-axis labels for better readability
+plt.grid()  # Display grid on plot
+plt.show()  # Render the plot
