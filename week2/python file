@@ -1,30 +1,43 @@
-import serial
-import time
-import csv
+Here is your Python code with added comments explaining each step:  
 
-SERIAL_PORT = 'COM10'  # Change based on your system
-BAUD_RATE = 9600
+```python
+import serial  # Library for serial communication
+import time  # Library for time-related functions
+import csv  # Library for CSV file handling
 
-# Open serial connection
-ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)
-time.sleep(2)  # Allow time for the connection to establish
+# Specify the serial port and baud rate for Arduino communication
+SERIAL_PORT = 'COM10'  # Change based on your system (e.g., 'COM3', '/dev/ttyUSB0')
+BAUD_RATE = 9600  # Baud rate must match the Arduino serial settings
 
-# CSV file setup
-csv_filename = "nimran.csv"
+# Open the serial connection to the Arduino
+ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1)  # Establish the serial connection
+time.sleep(2)  # Allow time for the connection to establish properly
 
+# Set up the CSV file for storing sensor data
+csv_filename = "nimran.csv"  # Name of the CSV file to store data
+
+# Open the CSV file in write mode
 with open(csv_filename, mode='w', newline='') as file:
-    writer = csv.writer(file)
-    writer.writerow(["Timestamp", "SensorData"])  # Write header
+    writer = csv.writer(file)  # Create a CSV writer object
+    writer.writerow(["Timestamp", "SensorData"])  # Write the header row to the CSV file
 
     try:
-        while True:
-            if ser.in_waiting:
+        while True:  # Infinite loop to continuously read data
+            if ser.in_waiting:  # Check if there is incoming data from the serial port
+                # Read a line from the serial port, decode to string, and remove whitespace
                 sensor_data = ser.readline().decode('utf-8').strip()
-                timestamp = time.strftime("%Y-%m-%d %H:%M:%S")  # More readable timestamp
+                # Get the current timestamp in a readable format
+                timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+                # Write the timestamp and sensor data to the CSV file
                 writer.writerow([timestamp, sensor_data])
+                # Print the timestamp and sensor data to the console
                 print(f"{timestamp}, {sensor_data}")
-                time.sleep(1)  # Delay for readability
+                time.sleep(1)  # Wait for a second before the next reading for readability
 
     except KeyboardInterrupt:
+        # If the user interrupts (Ctrl+C), close the serial connection gracefully
         print("Data collection stopped.")
-        ser.close()
+        ser.close()  # Close the serial port connection
+```
+
+Let me know if you need any more explanations or modifications!
