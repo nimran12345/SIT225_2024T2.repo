@@ -1,32 +1,44 @@
-#include <DHT.h>
-	
-	#define DHTPIN 2      
-	#define DHTTYPE DHT22  
-	
-	DHT dht(DHTPIN, DHTTYPE);
+#include <DHT.h>  // Include the DHT sensor library
+
+// Define the pin where the DHT sensor is connected
+#define DHTPIN 2       // DHT sensor is connected to digital pin 2
+
+// Define the type of DHT sensor being used (DHT22 in this case)
+#define DHTTYPE DHT22  
+
+// Create a DHT object with the specified pin and type
+DHT dht(DHTPIN, DHTTYPE);
 
 void setup() {
-	    Serial.begin(9600); 
-	    dht.begin();         
-	}
+    Serial.begin(9600);  // Initialize serial communication at 9600 baud rate
+    dht.begin();         // Initialize the DHT sensor
+}
 
-	void loop() {
-	    float temperature = dht.readTemperature();  
-	    float humidity = dht.readHumidity();        
-	
+void loop() {
+    // Read temperature in Celsius from the DHT sensor
+    float temperature = dht.readTemperature();  
+    // Read humidity from the DHT sensor
+    float humidity = dht.readHumidity();        
+
+    // Check if the readings are valid (not NaN - Not a Number)
     if (isnan(temperature) || isnan(humidity)) {
-	        Serial.println("Error reading from DHT sensor!");
+        // Print an error message if the sensor readings fail
+        Serial.println("Error reading from DHT sensor!");
     } else {
+        // Print temperature and humidity to the serial monitor
         Serial.print("Temperature: ");
-	        Serial.print(temperature);
-        Serial.print(" °C, Humidity: ");	 
-               Serial.print(humidity);
+        Serial.print(temperature);  // Display temperature value
+        Serial.print(" °C, Humidity: ");
+        Serial.print(humidity);     // Display humidity value
         Serial.println(" %");
 
-	        Serial.print(temperature);
-	        Serial.print(",");
-	        Serial.println(humidity);
-	    }
+        // Print the temperature and humidity in a CSV-like format
+        Serial.print(temperature);  // Print temperature without label
+        Serial.print(",");          // Comma separator for CSV format
+        Serial.println(humidity);   // Print humidity without label
+    }
 
+    // Wait for 10 seconds before the next reading (to reduce data frequency)
     delay(10000); 
-	}
+}
+
