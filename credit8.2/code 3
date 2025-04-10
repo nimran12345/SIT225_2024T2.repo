@@ -1,0 +1,31 @@
+# ---- Import the Smooth Plot Function ----
+# This function is assumed to be defined in a separate file (smooth_live_plot.py)
+from smooth_live_plot import smooth_live_plot
+
+# Import random for simulating fake accelerometer data
+import random
+
+# ---- Fake Accelerometer Data Generator ----
+# This function simulates 3D accelerometer data (X, Y, Z)
+# Each value is randomly chosen between -10 and 10, rounded to 2 decimal places
+def get_fake_accel_data():
+    return (
+        round(random.uniform(-10, 10), 2),  # Simulated X-axis acceleration
+        round(random.uniform(-10, 10), 2),  # Simulated Y-axis acceleration
+        round(random.uniform(-10, 10), 2)   # Simulated Z-axis acceleration
+    )
+
+# ---- Launch the Real-Time Dashboard ----
+# Call the smooth_live_plot function with:
+# - data_fn: the function that provides real-time data (in this case, simulated)
+# - labels: names for each axis (X, Y, Z)
+# - buffer_size: how many data points to display at once
+# - update_interval: how often to fetch and display new data (in milliseconds)
+# - graph_title: title to display above the graph
+smooth_live_plot(
+    data_fn=get_fake_accel_data,
+    labels=['Accel X', 'Accel Y', 'Accel Z'],
+    buffer_size=100,
+    update_interval=200,
+    graph_title="Smooth Real-Time Accelerometer Data"
+)
