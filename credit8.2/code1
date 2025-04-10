@@ -1,0 +1,90 @@
+# ---- Dash and Required Libraries ----
+import dash
+from dash import dcc, html
+from dash.dependencies import Output, Input
+import plotly.graph_objs as go
+from collections import deque
+import random  # For simulating data (replace with actual Arduino IoT data fetch)
+import time
+
+# ---- Buffer Settings ----
+# Maximum number of data points to display (rolling window)
+BUFFER_SIZE = 100
+
+# Deques to store accelerometer data for X, Y, Z axes and timestamps
+accel_x = deque(maxlen=BUFFER_SIZE)
+accel_y = deque(maxlen=BUFFER_SIZE)
+accel_z = deque(maxlen=BUFFER_SIZE)
+timestamps = deque(maxlen=BUFFER_SIZE)
+
+# ---- Simulated Data Generator ----
+# Replace this with your actual Arduino IoT Cloud data fetching logic
+def get_latest_data():
+    return (
+        round(random.uniform(-10, 10), 2),  # Simulated X-axis acceleration
+        round(random.uniform(-10, 10), 2),  # Simulated Y-axis acceleration
+        round(random.uniform(-10, 10), 2),  # Simulated Z-axis acceleration
+        time.time()                         # Current timestamp
+    )
+
+# ---- Initialize Buffers with Dummy Data ----
+# Fill the buffers so that the initial graph is populated with data
+for _ in range(BUFFER_SIZE):
+    x, y, z, t = get_latest_data()
+    accel_x.append(x)
+    accel_y.append(y)
+    accel_z.append(z)
+    timestamps.append(t)
+
+# ---- Dash App Initialization ----
+app = dash.Dash(_name)  # Corrected "name" (was previously "_name")
+app.layout = html.Div([
+    html.H2("Live Accelerometer Data (Smooth Dash Update)", style={'textAlign': 'center'}),
+
+    # Graph component that displays the accelerometer data
+    dcc.Graph(id='live-accel-graph'),
+
+    # Interval component to trigger updates every 200 milliseconds
+    dcc.Interval(
+        id='graph-update',
+        interval=200,  # Update frequency in milliseconds
+        n_intervals=0  # Initial trigger count
+    )
+])
+
+# ---- Callback to Update Graph ----
+# This function updates the graph with new data every interval
+@app.callback(
+    Output('live-accel-graph', 'figure'),
+    Input('graph-update', 'n_intervals')
+)
+def update_graph(n):
+    # Fetch latest simulated data point
+    x, y, z, t = get_latest_data()
+
+    # Append new data to the deques (oldest will be automatically dropped when buffer is full)
+    accel_x.append(x)
+    accel_y.append(y)
+    accel_z.append(z)
+    timestamps.append(t)
+
+    # Create a new Plotly figure with line graphs for X, Y, Z axes
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=list(timestamps), y=list(accel_x), name='X', mode='lines'))
+    fig.add_trace(go.Scatter(x=list(timestamps), y=list(accel_y), name='Y', mode='lines'))
+    fig.add_trace(go.Scatter(x=list(timestamps), y=list(accel_z), name='Z', mode='lines'))
+
+    # Layout customization for the figure
+    fig.update_layout(
+        xaxis_title="Time",
+        yaxis_title="Acceleration (m/s²)",
+        margin=dict(l=40, r=20, t=40, b=40),
+        template="plotly_dark",   # Dark theme for better visibility
+        uirevision=True           # Keeps UI state (e.g., zoom) stable between updates
+    )
+    return fig
+
+# ---- Run the Dash App ----
+# Corrected "_name_" usage to properly launch the server
+if _name_ == '_main_':
+    app.run(debug=True)
