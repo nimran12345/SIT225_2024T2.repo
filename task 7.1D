@@ -1,0 +1,71 @@
+import speech_recognition as sr   # Library for converting spoken words into text
+import RPi.GPIO as GPIO           # Library for controlling Raspberry Pi GPIO pins
+
+# --------------------------------------------------
+# GPIO Setup
+# --------------------------------------------------
+LED_PIN = 17                      # Assign GPIO pin 17 to control the LED
+
+GPIO.setmode(GPIO.BCM)            # Use Broadcom (BCM) pin numbering system
+GPIO.setup(LED_PIN, GPIO.OUT)     # Set the LED pin as an output pin
+
+# --------------------------------------------------
+# Speech Recognition Setup
+# --------------------------------------------------
+recognizer = sr.Recognizer()      # Create a recognizer object to detect and process voice commands
+
+# --------------------------------------------------
+# Function: Listen and Process Voice Commands
+# --------------------------------------------------
+def listen_and_process():
+    """
+    This function continuously listens to the microphone,
+    recognizes the spoken words, and performs actions 
+    based on commands such as 'on', 'off', or 'stop'.
+    """
+    with sr.Microphone() as source:
+        print("\nListening...")                     # Indicate that the program is waiting for input
+        recognizer.adjust_for_ambient_noise(source)  # Adjust to background noise
+        audio = recognizer.listen(source)            # Capture voice input
+
+    try:
+        # Convert the captured audio into text using Google's API
+        command = recognizer.recognize_google(audio).lower()
+        print(f"Command received: '{command}'")      # Display what was recognized
+
+        # ------------------ Command Logic ------------------
+        if "on" in command:                          # If 'on' is detected in the speech
+            GPIO.output(LED_PIN, GPIO.HIGH)          # Turn the LED ON
+            print("LED is now ON")
+
+        elif "off" in command:                       # If 'off' is detected in the speech
+            GPIO.output(LED_PIN, GPIO.LOW)           # Turn the LED OFF
+            print("LED is now OFF")
+
+        elif "stop" in command or "exit" in command: # If 'stop' or 'exit' is said
+            print("Voice control stopped.")
+            return False                             # Exit the loop and end the program
+
+    except sr.UnknownValueError:
+        # Triggered if the speech was unclear or unrecognized
+        print("Sorry, I couldn’t understand that. Please try again.")
+
+    except sr.RequestError:
+        # Triggered if the Google Speech API is not reachable
+        print("Speech recognition service unavailable. Check your internet connection.")
+
+    return True  # Continue listening unless 'stop' was said
+
+# --------------------------------------------------
+# Main Program Execution
+# --------------------------------------------------
+# This block runs the program only when this file is executed directly
+if __name__ == "__main__":
+    try:
+        print("Voice control activated. Say 'on', 'off', or 'stop'.")
+        while listen_and_process():                  # Keep listening for commands
+            pass
+    finally:
+        # Clean up GPIO settings when the program ends
+        print("Program ended. Cleaning up GPIO pins.")
+        GPIO.cleanup()
