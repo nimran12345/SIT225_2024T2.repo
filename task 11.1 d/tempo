@@ -1,0 +1,45 @@
+import serial, time
+from gpiozero import Servo
+
+# --- Setup ---
+left_servo = Servo(17)
+right_servo = Servo(18)
+ser = serial.Serial("/dev/ttyUSB0", 115200, timeout=0)
+
+# --- Motion Control ---
+def move_forward():
+    left_servo.max()
+    right_servo.min()
+
+def stop():
+    left_servo.mid()
+    right_servo.mid()
+
+def turn_right_start():
+    left_servo.max()
+    right_servo.max()
+
+def turn_left_start():
+    left_servo.min()
+    right_servo.min()
+
+# --- LiDAR Reader ---
+def read_lidar_fast():
+    """Read a single TF-Luna frame quickly (non-blocking)."""
+    while ser.in_waiting >= 9:
+        data = ser.read(9)
+        if data[0] == 0x59 and data[1] == 0x59:
+            return data[2] + (data[3] << 8)
+    return None
+
+# --- State Variables ---
+mode = "forward"
+turn_start_time = 0
+turn_duration = 0.6   # seconds
+obstacle_threshold = 10  # cm
+
+print("🤖 Real-Time LiDAR Bot Running")
+
+try:
+    while True:
+        dist = read_lidar_fast()
